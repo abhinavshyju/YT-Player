@@ -1,23 +1,294 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>YouTube TS Player</title>
-    <style>
-      body {
-        margin: 0;
-      }
-      .mainContainer {
-        width: 100%;
-      }
-    </style>
-    <link rel="stylesheet" href="./src/YT.css" />
-  </head>
-  <body>
-    <div class="mainContainer">
-      <div class="" id="my-player-container"></div>
+<html lang="en" class="scroll-smooth">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YT-Player - YouTube Video Player Wrapper</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            "yt-red": "#FF0000",
+            "mono-green": "#00FF00",
+            "mono-amber": "#FFBF00",
+          },
+          fontFamily: {
+            mono: [
+              "JetBrains Mono",
+              "Fira Code",
+              "Consolas",
+              "Monaco",
+              "Courier New",
+              "monospace",
+            ],
+          },
+        },
+      },
+    };
+  </script>
+  <!-- Added Google Fonts for JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet" />
+</head>
+<!-- Made background pure black and removed dark mode classes -->
+
+<body class="bg-black min-h-screen font-mono text-mono-green">
+  <!-- Header -->
+  <!-- Removed dark mode classes and made header pure black -->
+  <header class="bg-black shadow-sm border-b border-mono-green/30">
+    <div class="max-w-[2440px] mx-auto px-8 py-6">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <!-- Updated logo with terminal-style design -->
+          <div
+            class="w-12 h-12 bg-mono-green rounded border-2 border-mono-green flex items-center justify-center shadow-lg">
+            <span class="text-black font-bold text-lg">▶</span>
+          </div>
+          <div>
+            <h1 class="text-3xl font-bold text-mono-green">YT-Player</h1>
+            <p class="text-sm text-mono-green/70">
+              YouTube Video Player Wrapper
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center space-x-4">
+          <!-- Removed dark mode toggle button completely -->
+          <!-- Updated GitHub button with terminal styling -->
+          <a href="#"
+            class="inline-flex items-center px-6 py-3 bg-transparent border-2 border-mono-green text-mono-green rounded hover:bg-mono-green hover:text-black transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-mono-green/50 shadow-lg">
+            <span class="mr-2">[</span>
+            <span>GitHub</span>
+            <span class="ml-2">]</span>
+          </a>
+        </div>
+      </div>
     </div>
-    <script type="module" src="/src/main.ts"></script>
-  </body>
+  </header>
+
+  <main class="max-w-[2440px] mx-auto px-8 py-8">
+    <!-- Main content area with two-column layout on desktop -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+      <!-- Video Player Section - Left Column -->
+      <section class="lg:col-span-1">
+        <!-- Removed dark mode classes and made background pure black -->
+        <div class="bg-black rounded border-2 border-mono-green/50 shadow-xl overflow-hidden">
+          <div class="p-8">
+            <!-- Added terminal-style header with brackets -->
+            <h2 class="text-2xl font-bold text-mono-green mb-6">
+              [VIDEO_PLAYER]
+            </h2>
+
+            <div class="" id="my-player-container"></div>
+          </div>
+
+          <!-- Control Section -->
+          <!-- Removed dark mode classes and made control section darker -->
+          <div class="border-t border-mono-green/30 bg-black p-8">
+            <h3 class="text-lg font-semibold text-mono-green mb-6">
+              [CONTROLS]
+            </h3>
+            <div class="space-y-4">
+              <div class="grid grid-cols-[1fr_200px] gap-2 items-end">
+                <div class="">
+                  <label for="video-id" class="block text-sm font-medium text-mono-green/70 mb-3">$ video_id:</label>
+                  <!-- Terminal-style input field -->
+                  <input type="text" id="video-id" placeholder="> dQw4w9WgXcQ"
+                    class="w-full px-4 py-3 border border-mono-green/50 rounded bg-black text-mono-green placeholder-mono-green/50 focus:ring-2 focus:ring-mono-green/50 focus:border-mono-green transition-all duration-200 outline-none" />
+
+                </div>
+                <button id="video-id-update"
+                  class="h-[50px] flex-1 px-6 py-3 bg-transparent border-2 border-mono-green text-mono-green rounded hover:bg-mono-green hover:text-black focus:outline-none focus:ring-2 focus:ring-mono-green/50 transition-all duration-200 font-semibold">
+                  [UPDATE]
+                </button>
+              </div>
+              <div class="flex gap-3">
+                <!-- Terminal-style buttons -->
+                <button id="video-play"
+                  class="flex-1 px-6 py-3 bg-transparent border-2 border-mono-green text-mono-green rounded hover:bg-mono-green hover:text-black focus:outline-none focus:ring-2 focus:ring-mono-green/50 transition-all duration-200 font-semibold">
+                  [PLAY]
+                </button>
+                <button id="video-pause"
+                  class="flex-1 px-6 py-3 bg-transparent border-2 border-mono-amber text-mono-amber rounded hover:bg-mono-amber hover:text-black focus:outline-none focus:ring-2 focus:ring-mono-amber/50 transition-all duration-200 font-semibold">
+                  [PAUSE]
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Code Section - Right Column -->
+      <section class="lg:col-span-1">
+        <!-- Removed dark mode classes and made background pure black -->
+        <div class="bg-black rounded border-2 border-mono-green/50 shadow-xl overflow-hidden">
+          <div class="p-8">
+            <h2 class="text-2xl font-bold text-mono-green mb-6">
+              [CODE_EXAMPLE]
+            </h2>
+            <!-- Enhanced code block with terminal styling -->
+            <div class="bg-black border border-mono-green/30 rounded p-6 overflow-x-auto">
+              <div class="text-mono-green/70 text-xs mb-4">
+                // yt-player.js
+              </div>
+              <pre class="text-sm font-mono bg-gray-100 dark:bg-black p-4 rounded overflow-x-auto">
+  <code class="language-javascript">
+<span class="text-mono-amber">import</span> { <span class="text-blue-400">YouTubePlayer</span> } <span class="text-mono-amber">from</span> <span class="text-green-400">'./Youtube-Player'</span>;
+
+<span class="text-gray-500 dark:text-gray-600">// const videoId = "wI98oxUbWSY";</span>
+<span class="text-mono-amber">const</span> <span class="text-blue-300">videoId</span> = <span class="text-green-400">'1qMNtY5IFac'</span>;
+<span class="text-mono-amber">const</span> <span class="text-blue-300">containerId</span> = <span class="text-green-400">'my-player-container'</span>;
+
+<span class="text-mono-amber">const</span> <span class="text-blue-300">player</span> = <span class="text-mono-amber">new</span> <span class="text-blue-400">YouTubePlayer</span>(<span class="text-blue-300">containerId</span>, <span class="text-blue-300">videoId</span>, {
+  <span class="text-cyan-400">onReady</span>: <span class="text-mono-amber">()</span> =&gt; {
+    <span class="text-blue-400">console</span>.<span class="text-cyan-400">log</span>(<span class="text-green-400">'Player is ready!'</span>);
+  },
+  <span class="text-gray-500 dark:text-gray-600">// onStateChange: (e) =&gt; {},</span>
+});
+  </code>
+</pre>
+            </div>
+
+            <!-- Updated additional sections with terminal styling -->
+            <div class="mt-6 space-y-4">
+              <h3 class="text-lg font-semibold text-mono-green">
+                [QUICK_SETUP]
+              </h3>
+              <div class="bg-black border border-mono-green/30 rounded p-4">
+                <span class="text-mono-green/70">$ </span><code
+                  class="text-sm text-mono-green">npm install yt-player</code>
+              </div>
+              <div class="grid grid-cols-2 gap-4">
+                <!-- Made feature boxes darker with pure black background -->
+                <div class="bg-black border border-mono-green/30 rounded p-4">
+                  <h4 class="font-medium text-mono-green mb-2">[FEATURES]</h4>
+                  <ul class="text-sm text-mono-green/70 space-y-1">
+                    <li>• Easy API</li>
+                    <li>• Full Control</li>
+                    <li>• TypeScript</li>
+                  </ul>
+                </div>
+                <div class="bg-black border border-mono-amber/30 rounded p-4">
+                  <h4 class="font-medium text-mono-amber mb-2">[METHODS]</h4>
+                  <ul class="text-sm text-mono-amber/70 space-y-1">
+                    <li>• play()</li>
+                    <li>• pause()</li>
+                    <li>• setVolume()</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Documentation Section -->
+    <section class="mb-12">
+      <!-- Removed dark mode classes and made background pure black -->
+      <div class="bg-black rounded border-2 border-mono-green/50 shadow-xl overflow-hidden">
+        <div class="p-8">
+          <h2 class="text-2xl font-bold text-mono-green mb-8">
+            [DOCUMENTATION]
+          </h2>
+
+          <div class="prose max-w-none">
+            <div class="grid md:grid-cols-2 gap-8">
+              <div>
+                <h3 class="text-xl font-semibold text-mono-green mb-4">
+                  $ getting_started
+                </h3>
+                <p class="text-mono-green/70 mb-6 leading-relaxed">
+                  YT-Player is a lightweight JavaScript wrapper for the
+                  YouTube Player API that provides a simple and intuitive
+                  interface for embedding and controlling YouTube videos in
+                  your web applications.
+                </p>
+
+                <h3 class="text-xl font-semibold text-mono-green mb-4">
+                  $ features
+                </h3>
+                <!-- Updated feature list with terminal-style checkmarks -->
+                <ul class="space-y-3 text-mono-green/70">
+                  <li class="flex items-center">
+                    <span class="text-mono-green mr-3">[✓]</span>
+                    Easy to use API for YouTube video embedding
+                  </li>
+                  <li class="flex items-center">
+                    <span class="text-mono-green mr-3">[✓]</span>
+                    Full control over playback (play, pause, seek, volume)
+                  </li>
+                  <li class="flex items-center">
+                    <span class="text-mono-green mr-3">[✓]</span>
+                    Event handling for player state changes
+                  </li>
+                  <li class="flex items-center">
+                    <span class="text-mono-green mr-3">[✓]</span>
+                    Responsive design support
+                  </li>
+                  <li class="flex items-center">
+                    <span class="text-mono-green mr-3">[✓]</span>
+                    TypeScript support included
+                  </li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 class="text-xl font-semibold text-mono-green mb-4">
+                  $ api_methods
+                </h3>
+                <!-- Terminal-style API documentation -->
+                <div class="bg-black border border-mono-green/30 rounded p-6">
+                  <div class="space-y-4">
+                    <div class="flex justify-between items-center py-3 border-b border-mono-green/20">
+                      <code class="text-sm font-mono text-mono-amber">play()</code>
+                      <span class="text-sm text-mono-green/70">Starts video playback</span>
+                    </div>
+                    <div class="flex justify-between items-center py-3 border-b border-mono-green/20">
+                      <code class="text-sm font-mono text-mono-amber">pause()</code>
+                      <span class="text-sm text-mono-green/70">Pauses video playback</span>
+                    </div>
+                    <div class="flex justify-between items-center py-3 border-b border-mono-green/20">
+                      <code class="text-sm font-mono text-mono-amber">setVolume(volume)</code>
+                      <span class="text-sm text-mono-green/70">Sets the volume (0-100)</span>
+                    </div>
+                    <div class="flex justify-between items-center py-3">
+                      <code class="text-sm font-mono text-mono-amber">seekTo(seconds)</code>
+                      <span class="text-sm text-mono-green/70">Seeks to a specific time</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <!-- Removed dark mode classes and made footer pure black -->
+  <footer class="bg-black border-t border-mono-green/30 mt-16">
+    <div class="max-w-7xl mx-auto px-4 py-12">
+      <div class="text-center">
+        <p class="text-mono-green/70 text-lg">
+          Built with <span class="text-mono-green">♥</span> for the YouTube
+          developer community
+        </p>
+        <p class="text-sm text-mono-green/50 mt-3">
+          © 2024 YT-Player. Open source and free to use.
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Removed all dark mode toggle JavaScript functionality -->
+</body>
+<script type="module" src="./src/main.ts"></script>
+<link rel="stylesheet" href="./src/YT.css" />
+
 </html>

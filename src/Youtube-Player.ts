@@ -5,7 +5,7 @@ interface YouTubePlayerOptions {
 
 export class YouTubePlayer {
   private player: YT.Player | null = null;
-  private readonly videoId: string;
+  private videoId: string;
   private readonly containerId: string;
   private isPlaying = false;
   private firstPlay = true;
@@ -19,7 +19,9 @@ export class YouTubePlayer {
   private videoDurationText!: HTMLElement;
   private currentTimeText!: HTMLElement;
   private hoverContainer!: HTMLDivElement;
-  private hideControlsTimeout: number | undefined;
+  private hideControlsTimeout: number | null = null;
+  private timeTrackingFrameId: number | null = null;
+  private isNewVideoLoading = false;
 
   public onReady: (() => void) | null = null;
   public onStateChange: ((e: YT.OnStateChangeEvent) => void) | null = null;
@@ -32,11 +34,10 @@ export class YouTubePlayer {
     this.containerId = containerId;
     this.videoId = videoId;
     const parentElement = document.getElementById(this.containerId);
-    if (!parentElement) {
+    if (!parentElement)
       throw new Error(`Element with id "${this.containerId}" not found.`);
-    }
-    this.parent = parentElement;
 
+    this.parent = parentElement;
     this.onReady = options.onReady || null;
     this.onStateChange = options.onStateChange || null;
 
@@ -97,14 +98,13 @@ export class YouTubePlayer {
       videoId: this.videoId,
       playerVars: {
         autoplay: 1,
-        cc_load_policy: 0,
-        color: "white",
         controls: 0,
         disablekb: 1,
         fs: 0,
         iv_load_policy: 3,
-        loop: 0,
         playsinline: 1,
+        cc_load_policy: 0,
+
         rel: 0,
       },
       events: {
@@ -116,72 +116,65 @@ export class YouTubePlayer {
 
   private onPlayerReady(): void {
     this.player?.pauseVideo();
-    this.totalTime = this.player!.getDuration();
-    this.videoDurationText.innerText = this.formatTime(this.totalTime);
-
     this.bindControls();
     this.startTimeTracking();
     this.setupHoverAutoHide();
     this.setupPinchZoomListener();
     this.onResize();
 
-    if (this.onReady) {
-      this.onReady();
-    }
+    if (this.onReady) this.onReady();
   }
 
   private onPlayerStateChange(e: YT.OnStateChangeEvent): void {
+    if (
+      (e.data === YT.PlayerState.UNSTARTED ||
+        e.data === YT.PlayerState.PLAYING) &&
+      this.totalTime === 0
+    ) {
+      this.totalTime = this.player?.getDuration() || 0;
+      this.videoDurationText.innerText = this.formatTime(this.totalTime);
+    }
+
+    if (this.isNewVideoLoading && e.data === YT.PlayerState.CUED) {
+      this.isNewVideoLoading = false;
+      this.currentTimeText.innerText = this.formatTime(0);
+      this.progressBar.value = 0;
+    }
+
     if (e.data === YT.PlayerState.ENDED) {
       this.restartVideo();
       this.pause();
     }
 
-    if (this.onStateChange) {
-      this.onStateChange(e);
-    }
+    if (this.onStateChange) this.onStateChange(e);
   }
 
   private bindControls(): void {
-    this.playPauseBtn.addEventListener("click", this.togglePlay.bind(this));
-    this.fullscreenBtn.addEventListener(
-      "click",
-      this.toggleFullscreen.bind(this)
-    );
+    this.playPauseBtn.addEventListener("click", () => this.togglePlay());
+    this.fullscreenBtn.addEventListener("click", () => this.toggleFullscreen());
     this.progressBar.addEventListener("click", (e) =>
       this.handleProgressClick(e as MouseEvent)
     );
   }
 
   private startTimeTracking(): void {
+    if (this.timeTrackingFrameId)
+      cancelAnimationFrame(this.timeTrackingFrameId);
+
     const update = () => {
-      if (this.player) {
+      if (this.player && this.totalTime > 0) {
         this.currentTime = this.player.getCurrentTime();
         this.currentTimeText.innerText = this.formatTime(this.currentTime);
         this.progressBar.value = this.currentTime / this.totalTime;
       }
-      requestAnimationFrame(update);
+      this.timeTrackingFrameId = requestAnimationFrame(update);
     };
+
     update();
   }
 
   private togglePlay(): void {
     this.isPlaying ? this.pause() : this.play();
-  }
-
-  public play(): void {
-    if (this.firstPlay) {
-      this.firstPlay = false;
-      this.updateHoverBackground();
-    }
-    this.player?.playVideo();
-    this.playPauseBtn.setAttribute("data-state", "pause");
-    this.isPlaying = true;
-  }
-
-  public pause(): void {
-    this.player?.pauseVideo();
-    this.playPauseBtn.setAttribute("data-state", "play");
-    this.isPlaying = false;
   }
 
   private toggleFullscreen(): void {
@@ -203,7 +196,6 @@ export class YouTubePlayer {
     const clickX = e.clientX - rect.left;
     const clickPercent = clickX / rect.width;
     const seekTime = this.totalTime * clickPercent;
-
     this.player?.seekTo(seekTime, true);
   }
 
@@ -222,6 +214,7 @@ export class YouTubePlayer {
         this.container.classList.add("no-hover");
       }, 2000);
     };
+
     resetTimer();
     this.container.addEventListener("mousemove", resetTimer);
   }
@@ -233,13 +226,19 @@ export class YouTubePlayer {
   }
 
   private formatTime(time: number): string {
-    const minutes = Math.floor(time / 60);
+    const hours = Math.floor(time / 3600);
+    const minutes = Math.floor((time % 3600) / 60);
     const seconds = Math.floor(time % 60);
-    return `${this.pad(minutes)}:${this.pad(seconds)}`;
+
+    if (hours > 0) {
+      return `${this.pad(hours)}:${this.pad(minutes)}:${this.pad(seconds)}`;
+    } else {
+      return `${this.pad(minutes)}:${this.pad(seconds)}`;
+    }
   }
 
   private pad(value: number): string {
-    return value.toString().padStart(2, "0");
+    return value < 10 ? `0${value}` : `${value}`;
   }
 
   private setupPinchZoomListener(): void {
@@ -286,15 +285,46 @@ export class YouTubePlayer {
   }
 
   private onResize(): void {
-    window.addEventListener("resize", this.resetScale.bind(this));
+    window.addEventListener("resize", this.resetScale);
+  }
+
+  public play(): void {
+    if (this.firstPlay) {
+      this.firstPlay = false;
+      this.updateHoverBackground();
+    }
+    this.player?.playVideo();
+    this.playPauseBtn.setAttribute("data-state", "pause");
+    this.isPlaying = true;
+  }
+
+  public pause(): void {
+    this.player?.pauseVideo();
+    this.playPauseBtn.setAttribute("data-state", "play");
+    this.isPlaying = false;
+  }
+
+  public changeVideo(videoId: string): void {
+    if (this.videoId === videoId) return;
+    this.videoId = videoId;
+    this.firstPlay = true;
+    this.isNewVideoLoading = true;
+    this.totalTime = 0;
+    this.videoDurationText.innerText = "00:00";
+    this.currentTimeText.innerText = "00:00";
+    this.progressBar.value = 0;
+    this.updateHoverBackground();
+    this.player?.loadVideoById(videoId);
+    this.player?.pauseVideo();
   }
 
   public destroy(): void {
     this.player?.destroy();
     this.parent.innerHTML = "";
-    window.removeEventListener("resize", this.resetScale.bind(this));
-    if (this.hideControlsTimeout) {
-      clearTimeout(this.hideControlsTimeout);
-    }
+    window.removeEventListener("resize", this.resetScale);
+
+    if (this.timeTrackingFrameId)
+      cancelAnimationFrame(this.timeTrackingFrameId);
+    if (this.hideControlsTimeout) clearTimeout(this.hideControlsTimeout);
   }
 }
